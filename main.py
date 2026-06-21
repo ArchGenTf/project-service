@@ -18,6 +18,11 @@ app.add_middleware(
 # Include project router
 app.include_router(projects_router)
 
+@app.get("/healthz")
+async def healthz():
+    return {"status": "healthy"}
+
+
 # Startup and shutdown events to manage DB connection
 from db import db_manager
 
