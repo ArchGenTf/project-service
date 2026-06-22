@@ -1,12 +1,13 @@
 import datetime
 from fastapi import APIRouter, HTTPException, Depends, Header, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from bson import ObjectId
 from db import get_database
 from utils.auth_helper import decode_token
 
 router = APIRouter(prefix="/projects", tags=["projects"])
+
 
 # Authentication dependency (copied from auth-service)
 async def get_current_user(authorization: Optional[str] = Header(None)):
@@ -33,6 +34,7 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
         )
     return {"id": str(user["_id"]), "username": user["username"], "email": user["email"]}
 
+
 class ProjectSaveInput(BaseModel):
     id: Optional[str] = None
     name: str
@@ -47,12 +49,13 @@ class ProjectSaveInput(BaseModel):
     rto: Optional[str] = None
     rpo: Optional[str] = None
 
+
 @router.post("/")
 async def save_project(input_data: ProjectSaveInput, current_user: dict = Depends(get_current_user)):
     db = get_database()
     if db is None:
         return {"status": "success", "message": "Mock save successful."}
-    
+
     project_doc = {
         "username": current_user["username"],
         "name": input_data.name,
@@ -73,14 +76,14 @@ async def save_project(input_data: ProjectSaveInput, current_user: dict = Depend
             object_id = ObjectId(input_data.id)
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid project identifier formatting.")
-        
+
         # Load existing project to preserve/append versions
         existing = await db["projects"].find_one({"_id": object_id, "username": current_user["username"]})
         if not existing:
             raise HTTPException(status_code=404, detail="Project not found or unauthorized.")
-        
+
         versions = existing.get("versions", [])
-        
+
         # Create a new version snapshot
         new_version = {
             "version_id": f"v{len(versions) + 1}.0.0",
@@ -112,6 +115,7 @@ async def save_project(input_data: ProjectSaveInput, current_user: dict = Depend
         result = await db["projects"].insert_one(project_doc)
         return {"status": "success", "id": str(result.inserted_id), "message": "Project saved successfully."}
 
+
 @router.get("/")
 async def list_projects(current_user: dict = Depends(get_current_user)):
     db = get_database()
@@ -124,6 +128,7 @@ async def list_projects(current_user: dict = Depends(get_current_user)):
         del doc["_id"]
         projects.append(doc)
     return projects
+
 
 @router.get("/{project_id}")
 async def get_project(project_id: str, current_user: dict = Depends(get_current_user)):
@@ -140,6 +145,7 @@ async def get_project(project_id: str, current_user: dict = Depends(get_current_
     except Exception:
         raise HTTPException(status_code=400, detail="Malformed project identifier.")
 
+
 @router.delete("/{project_id}")
 async def delete_project(project_id: str, current_user: dict = Depends(get_current_user)):
     db = get_database()
@@ -152,6 +158,7 @@ async def delete_project(project_id: str, current_user: dict = Depends(get_curre
         return {"status": "success", "message": "Project deleted successfully."}
     except Exception:
         raise HTTPException(status_code=400, detail="Malformed project identifier.")
+
 
 @router.get("/{project_id}/versions")
 async def get_project_versions(project_id: str, current_user: dict = Depends(get_current_user)):
@@ -166,6 +173,7 @@ async def get_project_versions(project_id: str, current_user: dict = Depends(get
     except Exception:
         raise HTTPException(status_code=400, detail="Malformed project identifier.")
 
+
 @router.post("/{project_id}/versions/{version_id}/rollback")
 async def rollback_project_version(project_id: str, version_id: str, current_user: dict = Depends(get_current_user)):
     db = get_database()
@@ -176,12 +184,12 @@ async def rollback_project_version(project_id: str, version_id: str, current_use
         project = await db["projects"].find_one({"_id": object_id, "username": current_user["username"]})
         if not project:
             raise HTTPException(status_code=404, detail="Project not found.")
-        
+
         versions = project.get("versions", [])
         target_version = next((v for v in versions if v.get("version_id") == version_id), None)
         if not target_version:
             raise HTTPException(status_code=404, detail=f"Version snapshot '{version_id}' not found.")
-        
+
         # Restore active states
         await db["projects"].update_one(
             {"_id": object_id, "username": current_user["username"]},

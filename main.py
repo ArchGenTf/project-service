@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from routes.projects import router as projects_router
+from db import db_manager
 
 app = FastAPI(title="Project Service", version="1.0.0")
 
@@ -18,17 +19,16 @@ app.add_middleware(
 # Include project router
 app.include_router(projects_router)
 
+
 @app.get("/healthz")
 async def healthz():
     return {"status": "healthy"}
 
 
-# Startup and shutdown events to manage DB connection
-from db import db_manager
-
 @app.on_event("startup")
 async def startup_event():
     await db_manager.connect_to_database()
+
 
 @app.on_event("shutdown")
 async def shutdown_event():

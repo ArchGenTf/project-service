@@ -7,6 +7,7 @@ logger = logging.getLogger("project_service_database_manager")
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "archgen_db")
 
+
 class DatabaseManager:
     client: AsyncIOMotorClient = None
     db = None
@@ -24,7 +25,7 @@ class DatabaseManager:
                 socketTimeoutMS=30000,
             )
             self.db = self.client[DATABASE_NAME]
-            
+
             retries = 5
             for i in range(retries):
                 try:
@@ -33,7 +34,7 @@ class DatabaseManager:
                     return
                 except Exception as ping_err:
                     if i < retries - 1:
-                        logger.warning(f"Failed to connect to MongoDB on attempt {i+1}/{retries}: {ping_err}. Retrying in 2 seconds...")
+                        logger.warning(f"Failed to connect to MongoDB on attempt {i + 1}/{retries}: {ping_err}. Retrying in 2 seconds...")
                         await asyncio.sleep(2)
                     else:
                         logger.error(f"Failed to connect to MongoDB after {retries} attempts: {ping_err}. Project persistence disabled (Offline Mock Mode).")
@@ -50,8 +51,10 @@ class DatabaseManager:
             self.client.close()
             logger.info("MongoDB client connection closed.")
 
+
 # Export a singleton instance
 db_manager = DatabaseManager()
+
 
 def get_database():
     """Dependency resolver returning the database context for project service."""
