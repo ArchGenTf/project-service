@@ -25,6 +25,12 @@ async def healthz():
     return {"status": "healthy"}
 
 
+@app.get("/ready")
+@app.get("/readyz")
+async def ready():
+    return {"status": "ready"}
+
+
 @app.on_event("startup")
 async def startup_event():
     await db_manager.connect_to_database()
