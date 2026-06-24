@@ -10,9 +10,9 @@ The service routes are defined in [routes/projects.py](file:///c:/Users/Praveen/
 
 ```mermaid
 graph TD
-    Client[Client / Gateway] -->|Bearer Token Header| ProjSvc[Project Service]
-    ProjSvc -->|Verify & Decode Token| JWT[JWT Validator]
-    ProjSvc -->|Read / Write Canvas| DB[(MongoDB: Projects Collection)]
+    Client[Client / Gateway] -->|"Bearer Token Header"| ProjSvc[Project Service]
+    ProjSvc -->|"Verify & Decode Token"| JWT[JWT Validator]
+    ProjSvc -->|"Read / Write Canvas"| DB[(MongoDB: Projects Collection)]
 ```
 
 ### Key Capabilities:
