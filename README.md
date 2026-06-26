@@ -205,4 +205,4 @@ All routes require a valid `Authorization: Bearer <access_token>` header.
 
 Interactive endpoint documentations are hosted directly on the service container:
 - **Swagger UI**: Access at `http://localhost:8002/docs` in local dev environments.
-- **ReDoc**: Access at `http://localhost:8002/redoc` in local dev environments.
+- **ReDoc**: Access at `http://localhost:8002/redoc` in local dev environments.  
